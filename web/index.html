@@ -1,0 +1,56 @@
+<html>
+<body>
+<ul id="messagesList">
+
+</ul>
+
+<script
+	src="https://code.jquery.com/jquery-3.1.1.js"
+	integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA="
+	crossorigin="anonymous"></script>
+<textarea id="message"></textarea>
+<button id="sendMessage">Send</button>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+	let socket = io('http://localhost:5000');
+
+	socket.emit('authenticate', getParameterByName('username'));
+
+	socket.on('authenticated', function () {
+		$('#sendMessage').click(function () {
+			let message = $('#message').val();
+
+			socket.emit('send_message', message);
+
+			$('#messagesList').append('<li><strong>Me</strong> ' + message + '</li>');
+
+
+			$('#message').val('');
+		});
+
+		socket.on('new_message', function (data) {
+			$('#messagesList').append('<li><strong>' + data.author + '</strong> ' + data.message + '</li>');
+		});
+
+		socket.on('new_private_message', function (data) {
+			$('#messagesList').append('<li><strong>[PM] ' + data.author + '</strong> ' + data.message + '</li>');
+		});
+	});
+
+	function getParameterByName(name, url) {
+		if (!url) {
+			url = window.location.href;
+		}
+		name = name.replace(/[\[\]]/g, "\\$&");
+		var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+			results = regex.exec(url);
+		if (!results) return null;
+		if (!results[2]) return '';
+		return decodeURIComponent(results[2].replace(/\+/g, " "));
+	}
+
+</script>
+</body>
+</html>
